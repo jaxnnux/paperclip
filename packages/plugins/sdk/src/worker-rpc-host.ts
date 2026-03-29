@@ -210,7 +210,9 @@ export function runWorker(
   const entry = process.argv[1];
   if (typeof entry !== "string") return;
   const thisFile = path.resolve(fileURLToPath(moduleUrl));
-  const entryPath = path.resolve(entry);
+  const entryPath = path.resolve(
+    entry.startsWith("file:") ? fileURLToPath(entry) : entry,
+  );
   if (thisFile === entryPath) {
     startWorkerRpcHost({ plugin });
   }

@@ -21,6 +21,7 @@
 import { fork, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { createInterface, type Interface as ReadlineInterface } from "node:readline";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type { PaperclipPluginManifestV1 } from "@paperclipai/shared";
 import {
   JSONRPC_VERSION,
@@ -49,6 +50,8 @@ import type {
   InitializeParams,
 } from "@paperclipai/plugin-sdk";
 import { logger } from "../middleware/logger.js";
+
+const WORKER_BOOTSTRAP_PATH = fileURLToPath(new URL("./plugin-worker-bootstrap.cjs", import.meta.url));
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -616,7 +619,9 @@ export function createPluginWorkerHandle(
       TZ: process.env.TZ ?? "UTC",
     };
 
-    const child = fork(options.entrypointPath, [], {
+    const workerEntrypointSpecifier = pathToFileURL(options.entrypointPath).href;
+
+    const child = fork(WORKER_BOOTSTRAP_PATH, [workerEntrypointSpecifier], {
       stdio: ["pipe", "pipe", "pipe", "ipc"],
       execArgv: options.execArgv ?? [],
       env: workerEnv,

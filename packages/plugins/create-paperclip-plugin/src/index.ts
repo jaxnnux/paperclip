@@ -2,7 +2,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const VALID_TEMPLATES = ["default", "connector", "workspace"] as const;
 type PluginTemplate = (typeof VALID_TEMPLATES)[number];
@@ -491,6 +491,7 @@ function runCli() {
   console.log(`Created plugin scaffold at ${out}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const cliEntry = process.argv[1];
+if (typeof cliEntry === "string" && import.meta.url === pathToFileURL(path.resolve(cliEntry)).href) {
   runCli();
 }

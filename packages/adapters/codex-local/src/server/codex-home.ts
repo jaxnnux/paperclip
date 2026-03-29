@@ -46,7 +46,13 @@ async function ensureSymlink(target: string, source: string): Promise<void> {
   const existing = await fs.lstat(target).catch(() => null);
   if (!existing) {
     await ensureParentDir(target);
-    await fs.symlink(source, target);
+    try {
+      await fs.symlink(source, target);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException | undefined)?.code;
+      if (code !== "EPERM" && code !== "EACCES") throw error;
+      await fs.copyFile(source, target);
+    }
     return;
   }
 
@@ -61,7 +67,13 @@ async function ensureSymlink(target: string, source: string): Promise<void> {
   if (resolvedLinkedPath === source) return;
 
   await fs.unlink(target);
-  await fs.symlink(source, target);
+  try {
+    await fs.symlink(source, target);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException | undefined)?.code;
+    if (code !== "EPERM" && code !== "EACCES") throw error;
+    await fs.copyFile(source, target);
+  }
 }
 
 async function ensureCopiedFile(target: string, source: string): Promise<void> {
